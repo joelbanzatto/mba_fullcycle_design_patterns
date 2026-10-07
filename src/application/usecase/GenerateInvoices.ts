@@ -2,12 +2,13 @@ import ContractRepository from "../repository/ContractRepository";
 import Presenter from "../presenter/Presenter";
 import Usecase from "./Usecase";
 import Mediator from "../mediator/Mediator";
+import InvoiceOutput from "../dto/InvoiceOutput";
 
 export default class GenerateInvoices implements Usecase {
 
 	constructor (
 		readonly contractRepository: ContractRepository,
-		readonly presenter: Presenter,
+		readonly presenter: Presenter<Output[]>,
 		readonly mediator: Mediator
 	) {
 	}
@@ -33,7 +34,4 @@ type Input = {
 	format?: string
 }
 
-export type Output = {
-	date: Date,
-	amount: number
-}
+export type Output = InvoiceOutput;

@@ -1,9 +1,8 @@
-import { Output } from "../../application/usecase/GenerateInvoices";
 import Presenter from "../../application/presenter/Presenter";
 
-export default class JsonPresenter implements Presenter {
+export default class JsonPresenter<T> implements Presenter<T> {
 
-	present(output: Output[]): any {
+	present(output: T): T {
 		return output;
 	}
 
