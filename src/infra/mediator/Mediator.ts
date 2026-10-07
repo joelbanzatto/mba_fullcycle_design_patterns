@@ -1,4 +1,6 @@
-export default class Mediator {
+import MediatorPort from "../../application/mediator/Mediator";
+
+export default class Mediator implements MediatorPort {
 	observers: { event: string, callback: Function }[];
 
 	constructor () {
@@ -9,7 +11,7 @@ export default class Mediator {
 		this.observers.push({ event, callback });
 	}
 
-	async publish (event: string, data: any) {
+	async publish (event: string, data: any): Promise<void> {
 		for (const observer of this.observers) {
 			if (observer.event === event) {
 				await observer.callback(data);
