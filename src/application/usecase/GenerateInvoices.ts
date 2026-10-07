@@ -1,18 +1,20 @@
 import ContractRepository from "../repository/ContractRepository";
-import Presenter from "../presenter/Presenter";
+import PresenterFactory from "../presenter/PresenterFactory";
 import Usecase from "./Usecase";
 import Mediator from "../mediator/Mediator";
+import InvoiceOutput from "../dto/InvoiceOutput";
 
 export default class GenerateInvoices implements Usecase {
 
 	constructor (
 		readonly contractRepository: ContractRepository,
-		readonly presenter: Presenter,
+		readonly presenterFactory: PresenterFactory,
 		readonly mediator: Mediator
 	) {
 	}
 
 	async execute (input: Input): Promise<any> {
+		const presenter = this.presenterFactory.create(input.format);
 		const output: Output[] = [];
 		const contracts = await this.contractRepository.list();
 		for (const contract of contracts) {
@@ -22,7 +24,7 @@ export default class GenerateInvoices implements Usecase {
 			}
 		}
 		await this.mediator.publish("InvoicesGenerated", output);
-		return this.presenter.present(output);
+		return presenter.present(output);
 	}
 }
 
@@ -33,7 +35,4 @@ type Input = {
 	format?: string
 }
 
-export type Output = {
-	date: Date,
-	amount: number
-}
+export type Output = InvoiceOutput;

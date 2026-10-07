@@ -72,6 +72,22 @@ Expected response:
 
 Using `"type":"accrual"` returns one invoice for 500 dated `2022-01-01T13:00:00.000Z`. Generation is a simulation and does not persist invoices.
 
+The optional `format` field accepts `json` (the default) or `csv`. To request CSV:
+
+```sh
+curl -s -X POST http://localhost:3000/generate_invoices \
+  -H 'Content-Type: application/json' \
+  -d '{"month":1,"year":2022,"type":"accrual","format":"csv"}'
+```
+
+Expected response, as plain text without JSON quotes:
+
+```text
+2022-01-01;500
+```
+
+CSV contains one `YYYY-MM-DD;amount` line per invoice. An empty result produces an empty body. Unsupported formats cause the presenter factory to throw `Invalid format`.
+
 ## Validation
 
 Keep the API running, then use a second terminal:
@@ -81,11 +97,13 @@ npm test
 npm run typecheck
 ```
 
-The suite includes domain tests, database integration tests, and an API test that calls port 3000. All seven original tests should pass. The equivalent direct test command is `TZ=America/Sao_Paulo npx jest`.
+The suite includes the seven original tests, presenter factory and format tests, and API checks for JSON and unquoted CSV. API tests call port 3000. The equivalent direct test command is `TZ=America/Sao_Paulo npx jest`.
 
 ## Dependency boundaries
 
-`GenerateInvoices` receives a contract repository, presenter, and Mediator through application interfaces. The concrete implementations are wired in `src/main.ts`, which also registers `SendEmail` for `InvoicesGenerated` and wraps the use case in `LoggerDecorator`.
+`GenerateInvoices` receives a contract repository, presenter factory, and Mediator through application interfaces. The factory selects a presenter from the request's `format` before contracts are loaded. Presenters share a generic interface, and invoice data lives in a shared DTO. New formats can be added to the factory without changing the use case.
+
+The concrete implementations are wired in `src/main.ts`, which also registers `SendEmail` for `InvoicesGenerated` and wraps the use case in `LoggerDecorator`. The event carries invoice DTOs regardless of the response format.
 
 Application and domain code must not import infrastructure implementations. This command should produce no matches:
 
