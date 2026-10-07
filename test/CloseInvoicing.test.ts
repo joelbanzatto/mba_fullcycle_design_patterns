@@ -17,7 +17,10 @@ beforeEach(function () {
 		new Contract("first", "", 6000, 12, date),
 		new Contract("second", "", 12000, 12, date)
 	]) };
-	invoiceRepository = { replacePeriod: jest.fn().mockResolvedValue(undefined) };
+	invoiceRepository = {
+		replacePeriod: jest.fn().mockResolvedValue(undefined),
+		listByPeriod: jest.fn()
+	};
 	mediator = { publish: jest.fn().mockResolvedValue(undefined) };
 	closeInvoicing = new CloseInvoicing(contractRepository, invoiceRepository, new PresenterFactory(), mediator);
 });
@@ -29,6 +32,7 @@ test.each([undefined, "json"])("closes invoices with their contract IDs and retu
 		{ idContract: "second", date, amount: 1000 }
 	]);
 	expect(output).toEqual([{ date, amount: 500 }, { date, amount: 1000 }]);
+	expect(invoiceRepository.listByPeriod).not.toHaveBeenCalled();
 	expect(mediator.publish).toHaveBeenCalledTimes(1);
 	expect(mediator.publish).toHaveBeenCalledWith("InvoicesClosed", { ...input, invoices: 2, total: 1500 });
 });
