@@ -1,16 +1,14 @@
-import ContractDatabaseRepository from "../../infra/repository/ContractDatabaseRepository";
 import ContractRepository from "../repository/ContractRepository";
 import Presenter from "../presenter/Presenter";
-import JsonPresenter from "../../infra/presenter/JsonPresenter";
 import Usecase from "./Usecase";
-import Mediator from "../../infra/mediator/Mediator";
+import Mediator from "../mediator/Mediator";
 
 export default class GenerateInvoices implements Usecase {
 
 	constructor (
-		readonly contractRepository: ContractRepository, 
-		readonly presenter: Presenter = new JsonPresenter(),
-		readonly mediator: Mediator = new Mediator()
+		readonly contractRepository: ContractRepository,
+		readonly presenter: Presenter,
+		readonly mediator: Mediator
 	) {
 	}
 
