@@ -14,6 +14,13 @@ On macOS with Homebrew's `libpq`, add its client tools to your shell path if nee
 export PATH="$(brew --prefix libpq)/bin:$PATH"
 ```
 
+Clone the repository before running the setup commands:
+
+```sh
+git clone https://github.com/joelbanzatto/mba_fullcycle_design_patterns.git
+cd mba_fullcycle_design_patterns
+```
+
 ## Database setup
 
 The database adapter connects to `localhost:5432`, database `app`, with user `postgres` and password `123456`.
@@ -120,6 +127,34 @@ curl -s -X POST http://localhost:3000/close_invoicing \
 
 Expected body: `2022-01-05;6000`, as plain text. The response contains the batch persisted by that execution; the summary is sent only through the event.
 
+## Query closed invoices
+
+Pass `month`, `year`, `type`, and optional `format` through the query string:
+
+```sh
+curl -s "http://localhost:3000/invoices?month=1&year=2022&type=accrual"
+```
+
+After the accrual closing above, the response is:
+
+```json
+[{"date":"2022-01-01T13:00:00.000Z","amount":500}]
+```
+
+Results come from stored invoices, ordered by date ascending. Repeating the closing and querying again still returns one invoice. Running the generation endpoint does not change these stored results.
+
+For CSV after the cash closing:
+
+```sh
+curl -s "http://localhost:3000/invoices?month=1&year=2022&type=cash&format=csv"
+```
+
+Expected body: `2022-01-05;6000`. A period without a closing returns `[]` in JSON or an empty body in CSV:
+
+```sh
+curl -s "http://localhost:3000/invoices?month=3&year=2023&type=cash"
+```
+
 ## Validation
 
 Keep the API running, then use a second terminal:
@@ -129,7 +164,7 @@ npm test
 npm run typecheck
 ```
 
-The suite includes the seven original tests, presenter and format tests, repository and closing integration tests, and API checks. API tests call port 3000. The equivalent direct test command is `TZ=America/Sao_Paulo npx jest`.
+The suite includes the seven original tests, presenter and format tests, repository and closing integration tests, HTTP adapter tests, and API checks for closing and querying. API tests call port 3000. The equivalent direct test command is `TZ=America/Sao_Paulo npx jest`.
 
 Closing API tests use the 2022 seed period. Repository and rollback tests use separate years and remove their invoice fixtures after each test, so they can run together without changing the seeded contracts or payments.
 
@@ -147,8 +182,12 @@ The concrete implementations are wired in `src/main.ts`, which also registers `S
 
 `CloseInvoicing` reuses the domain's invoice generation strategies and adds an invoice repository dependency through its application interface. It pairs each invoice with the contract that generated it. The composition root applies `LoggerDecorator` to closing and registers `SendEmail` for `InvoicesClosed`.
 
+`GetInvoices` reads through the invoice repository and uses the same presenter factory. HTTP callbacks receive `(params, body, headers, query)` in that order. The controller converts the query's month and year to numbers; the adapter sends strings as plain text and objects or arrays as JSON.
+
 Application and domain code must not import infrastructure implementations. This command should produce no matches:
 
 ```sh
 grep -rEn "from ['\"][^'\"]*infra" src/application src/domain
 ```
+
+The course project's calculation strategies, contract payment loading, and HTTP error behavior are preserved. Error contracts are tested at the use-case level. Closings are processed one at a time; concurrent closings for the same period are outside the scope of this exercise.

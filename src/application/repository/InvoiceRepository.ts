@@ -6,4 +6,5 @@ export type InvoiceToSave = InvoiceOutput & {
 
 export default interface InvoiceRepository {
 	replacePeriod (month: number, year: number, type: string, invoices: InvoiceToSave[]): Promise<void>;
+	listByPeriod (month: number, year: number, type: string): Promise<InvoiceOutput[]>;
 }

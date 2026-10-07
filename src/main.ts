@@ -10,6 +10,8 @@ import SendEmail from "./application/usecase/SendEmail";
 import CloseInvoicing from "./application/usecase/CloseInvoicing";
 import CloseInvoicingController from "./infra/http/CloseInvoicingController";
 import InvoiceDatabaseRepository from "./infra/repository/InvoiceDatabaseRepository";
+import GetInvoices from "./application/usecase/GetInvoices";
+import InvoicesController from "./infra/http/InvoicesController";
 
 const connection = new PgPromiseAdapter();
 const contractRepository = new ContractDatabaseRepository(connection);
@@ -25,7 +27,9 @@ mediator.on("InvoicesClosed", async function (data: any) {
 const presenterFactory = new PresenterFactory();
 const generateInvoices = new LoggerDecorator(new GenerateInvoices(contractRepository, presenterFactory, mediator));
 const closeInvoicing = new LoggerDecorator(new CloseInvoicing(contractRepository, invoiceRepository, presenterFactory, mediator));
+const getInvoices = new GetInvoices(invoiceRepository, presenterFactory);
 const httpServer = new ExpressAdapter();
 new MainController(httpServer, generateInvoices);
 new CloseInvoicingController(httpServer, closeInvoicing);
+new InvoicesController(httpServer, getInvoices);
 httpServer.listen(3000);
